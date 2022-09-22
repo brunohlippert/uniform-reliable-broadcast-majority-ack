@@ -115,28 +115,29 @@ func BEB2URB(message BestEffortBroadcast_Ind_Message) URBMarjorityAck_Message {
 	}
 }
 
-/*
-func main() {
+// func main() {
 
-	if (len(os.Args) < 2) {
-		fmt.Println("Please specify at least one address:port!")
-		return
-	}
+// 	if len(os.Args) < 3 {
+// 		fmt.Println("Utilize pelo menos 3 enderecos (address:port)!")
+// 		fmt.Println("go run URBMarjorityAck.go 127.0.0.1:5001  127.0.0.1:6001 127.0.0.1:7001")
+// 		fmt.Println("go run URBMarjorityAck.go 127.0.0.1:6001  127.0.0.1:5001 127.0.0.1:7001")
+// 		fmt.Println("go run URBMarjorityAck.go 127.0.0.1:7001  127.0.0.1:6001  127.0.0.1:5001")
+// 		return
+// 	}
 
-	addresses := os.Args[1:]
-	fmt.Println(addresses)
+// 	addresses := os.Args[1:]
+// 	fmt.Println(addresses)
 
-	mod := BestEffortBroadcast_Module{
-		Req: make(chan BestEffortBroadcast_Req_Message),
-		Ind: make(chan BestEffortBroadcast_Ind_Message) }
-	mod.Init(addresses[0])
+// mod := BestEffortBroadcast_Module{
+// 	Req: make(chan BestEffortBroadcast_Req_Message),
+// 	Ind: make(chan BestEffortBroadcast_Ind_Message)}
+// mod.Init(addresses[0])
 
-	msg := BestEffortBroadcast_Req_Message{
-		Addresses: addresses,
-		Message: "BATATA!" }
+// msg := BestEffortBroadcast_Req_Message{
+// 	Addresses: addresses,
+// 	Message:   "BATATA!"}
 
-	yy := make(chan string)
-	mod.Req <- msg
-	<- yy
-}
-*/
+// yy := make(chan string)
+// mod.Req <- msg
+// <-yy
+// }
