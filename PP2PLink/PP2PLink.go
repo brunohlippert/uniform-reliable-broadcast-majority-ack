@@ -76,20 +76,17 @@ func (module *PP2PLink) Start(address string) {
 				// e passa para modulo de cima
 				for { //                              // enquanto conexao aberta
 					if err != nil {
-						fmt.Println(".", err)
 						break
 					}
 					bufTam := make([]byte, 4) //       // le tamanho da mensagem
 					_, err := io.ReadFull(conn, bufTam)
 					if err != nil {
-						module.outDbg("erro : " + err.Error() + " conexao fechada pelo outro processo.")
 						break
 					}
 					tam, err := strconv.Atoi(string(bufTam))
 					bufMsg := make([]byte, tam)        // declara buffer do tamanho exato
 					_, err = io.ReadFull(conn, bufMsg) // le do tamanho do buffer ou da erro
 					if err != nil {
-						fmt.Println("@", err)
 						break
 					}
 					msg := PP2PLink_Ind_Message{
@@ -122,7 +119,6 @@ func (module *PP2PLink) Send(message PP2PLink_Req_Message) {
 		conn, err = net.Dial("tcp", message.To)
 		module.outDbg("ok   : conexao iniciada com outro processo")
 		if err != nil {
-			fmt.Println(err)
 			return
 		}
 		module.Cache[message.To] = conn
@@ -143,7 +139,6 @@ func (module *PP2PLink) Send(message PP2PLink_Req_Message) {
 		conn, err = net.Dial("tcp", message.To)
 		if err != nil {
 			//fmt.Println(err)
-			module.outDbg("       " + err.Error())
 			return
 		} else {
 			module.outDbg("ok   : conexao iniciada com outro processo.")

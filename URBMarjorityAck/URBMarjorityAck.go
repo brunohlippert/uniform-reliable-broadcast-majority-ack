@@ -4,6 +4,7 @@ import (
 	. "MAJORITYACK/BEB"
 	"fmt"
 	"strings"
+	"sync"
 )
 
 type URBMarjorityAck_Message struct {
@@ -20,7 +21,7 @@ type URBMarjorityAck_Module struct {
 	Delivered map[URBMarjorityAck_Message]bool
 	Pending   map[URBMarjorityAck_Message]bool
 	Ack       map[URBMarjorityAck_Message]int
-
+	mu        sync.Mutex
 	Addresses []string
 
 	beb BestEffortBroadcast_Module
@@ -60,27 +61,41 @@ func (module *URBMarjorityAck_Module) Start() {
 		for {
 			select {
 			case y := <-module.Req:
-				module.Broadcast(y)
+				go module.Broadcast(y)
 			case y := <-module.beb.Ind:
-				module.Deliver(BEB2URB(y))
+				go module.Deliver(BEB2URB(y))
 			}
 		}
 	}()
 }
 
 func (module *URBMarjorityAck_Module) Broadcast(message URBMarjorityAck_Message) {
+	module.mu.Lock()
+	defer module.mu.Unlock()
 	module.Pending[message] = true
-	msg := URB2BEB(message, module.Addresses)
-	module.beb.Req <- msg
+
+	//Para enviar apenas a um address antes de falhar
+	if message.ID == "000000" {
+		// Remove o ID de erro para os outros processos fazerem broadcast
+		message.ID = "111111"
+		oneAddress := []string{module.Addresses[1]}
+		msg := URB2BEB(message, oneAddress)
+		module.beb.Req <- msg
+	} else {
+		msg := URB2BEB(message, module.Addresses)
+		module.beb.Req <- msg
+	}
+
 }
 
 func (module *URBMarjorityAck_Module) Deliver(message URBMarjorityAck_Message) {
+	module.mu.Lock()
+	defer module.mu.Unlock()
 	module.Ack[message] += 1
 
 	if !module.Pending[message] {
-		module.Broadcast(message) // O Pending eh adicionado dentro da funcao broadcast
+		go module.Broadcast(message) // O Pending eh adicionado dentro da funcao broadcast
 	}
-
 	// Verifica se pode fazer delivery
 	isPending := module.Pending[message]
 	isDelivered := module.Delivered[message]
@@ -114,30 +129,3 @@ func BEB2URB(message BestEffortBroadcast_Ind_Message) URBMarjorityAck_Message {
 		ID:      s[2],
 	}
 }
-
-// func main() {
-
-// 	if len(os.Args) < 3 {
-// 		fmt.Println("Utilize pelo menos 3 enderecos (address:port)!")
-// 		fmt.Println("go run URBMarjorityAck.go 127.0.0.1:5001  127.0.0.1:6001 127.0.0.1:7001")
-// 		fmt.Println("go run URBMarjorityAck.go 127.0.0.1:6001  127.0.0.1:5001 127.0.0.1:7001")
-// 		fmt.Println("go run URBMarjorityAck.go 127.0.0.1:7001  127.0.0.1:6001  127.0.0.1:5001")
-// 		return
-// 	}
-
-// 	addresses := os.Args[1:]
-// 	fmt.Println(addresses)
-
-// mod := BestEffortBroadcast_Module{
-// 	Req: make(chan BestEffortBroadcast_Req_Message),
-// 	Ind: make(chan BestEffortBroadcast_Ind_Message)}
-// mod.Init(addresses[0])
-
-// msg := BestEffortBroadcast_Req_Message{
-// 	Addresses: addresses,
-// 	Message:   "BATATA!"}
-
-// yy := make(chan string)
-// mod.Req <- msg
-// <-yy
-// }
